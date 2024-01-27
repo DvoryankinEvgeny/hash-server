@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  hash-server:
+    build:
+      dockerfile: ../Dockerfile
+    volumes:
+      - ..:/workspaces:cached
+      - /Users/evgenii/.ssh:/home/vscode/.ssh:cached
+    command: sleep infinity
