@@ -20,7 +20,8 @@
 			"extensions": [
 				"ms-vscode.cpptools-extension-pack",
 				"ms-azuretools.vscode-docker",
-				"GitHub.copilot"
+				"GitHub.copilot",
+				"streetsidesoftware.code-spell-checker"
 			]
 		}
 	}
