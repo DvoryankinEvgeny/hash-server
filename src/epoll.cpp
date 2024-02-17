@@ -25,12 +25,12 @@ EPoll::~EPoll() {
   if (fd_ > 0) close(fd_);
 }
 
-void EPoll::Add(const TCPSocket& socket, int events) {
-  struct epoll_event event;
+void EPoll::Add(const TCPSocket& socket, EPollDirection direction) {
+  struct epoll_event event {};
 
   memset(&event, 0, sizeof(struct epoll_event));
 
-  event.events = events;
+  event.events = static_cast<int>(direction);
   event.data.fd = socket.GetFd();
   int error = epoll_ctl(fd_, EPOLL_CTL_ADD, socket.GetFd(), &event);
   if (error < 0) {
@@ -45,12 +45,12 @@ void EPoll::Delete(const TCPSocket& socket) {
   }
 }
 
-void EPoll::Modify(const TCPSocket& socket, int events) {
-  struct epoll_event event;
+void EPoll::Modify(const TCPSocket& socket, EPollDirection direction) {
+  struct epoll_event event {};
 
   memset(&event, 0, sizeof(struct epoll_event));
 
-  event.events = events;
+  event.events = static_cast<int>(direction);
   event.data.fd = socket.GetFd();
   int error = epoll_ctl(fd_, EPOLL_CTL_MOD, socket.GetFd(), &event);
   if (error < 0) {

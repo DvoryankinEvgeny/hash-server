@@ -10,6 +10,13 @@
 #include "socket.hpp"
 
 namespace hash_server {
+
+enum class EPollDirection {
+  kReadFrom = EPOLLIN,
+  kWriteTo = EPOLLOUT,
+  kReadWrite = EPOLLIN | EPOLLOUT,
+};
+
 class EPoll {
  public:
   EPoll();
@@ -20,9 +27,9 @@ class EPoll {
   EPoll(EPoll&&) = delete;
   EPoll& operator=(EPoll&&) = delete;
 
-  void Add(const TCPSocket& socket, int events);
+  void Add(const TCPSocket& socket, EPollDirection direction);
   void Delete(const TCPSocket& socket);
-  void Modify(const TCPSocket& socket, int events);
+  void Modify(const TCPSocket& socket, EPollDirection direction);
   std::vector<int> Wait(std::chrono::milliseconds timeout);
 
  private:

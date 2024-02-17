@@ -52,7 +52,7 @@ class Client {
  public:
   Client() {
     socket_.Connect(hash_server::SocketAddress(kServerAddress, kServerPort));
-    epoll_.Add(socket_, EPOLLOUT);
+    epoll_.Add(socket_, hash_server::EPollDirection::kWriteTo);
   }
 
   void WaitForConnection() {
@@ -70,7 +70,7 @@ class Client {
   void SendString(const std::string& str) { socket_.Write(str); }
 
   std::string ReadResponse() {
-    epoll_.Modify(socket_, EPOLLIN);
+    epoll_.Modify(socket_, hash_server::EPollDirection::kReadFrom);
     const auto desc = epoll_.Wait(kPollingTimeout);
     std::string response;
     response.reserve(kExpectedResponseSize);
