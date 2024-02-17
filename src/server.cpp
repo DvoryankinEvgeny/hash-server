@@ -5,10 +5,7 @@
 namespace hash_server {
 
 Server::Server(SocketAddress &&address, ServerConfiguration &&config)
-    : config_(std::move(config)),
-      address_(std::move(address)),
-      epoll_(config_.epoll_max_events),
-      thread_pool_(config_.thread_pool_size) {}
+    : config_(std::move(config)), address_(std::move(address)), thread_pool_(config_.thread_pool_size) {}
 
 void Server::RunLoop() {
   std::cout << "Server::RunLoop\n";
@@ -20,7 +17,7 @@ void Server::RunLoop() {
 
   while (!stopped_) {
     std::cout << "Server::Loop\n";
-    const auto readyDescriptors = epoll_.Wait(std::chrono::milliseconds{3000});
+    const auto readyDescriptors = epoll_.Wait(std::chrono::milliseconds{3000}, config_.epoll_max_events);
     for (const auto descriptor : readyDescriptors) {
       std::cout << "Descriptor: " << descriptor << "\n";
       if (descriptor == socket_.GetFd()) {

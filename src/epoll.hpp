@@ -32,10 +32,9 @@ enum class EPollDirection {
 class EPoll {
  public:
   /**
-   * @brief Constructor that takes the maximum number of events. Creates a new epoll instance.
-   * @param max_events The maximum number of events that epoll can handle at once.
+   * @brief Constructor that creates a new epoll instance.
    */
-  EPoll(size_t max_events);
+  EPoll();
 
   /**
    * @brief Destructor. Closes the epoll instance.
@@ -87,17 +86,13 @@ class EPoll {
    * @param timeout The maximum time to wait for events.
    * @return A vector of file descriptors for the sockets with events.
    */
-  std::vector<int> Wait(std::chrono::milliseconds timeout);
+  std::vector<int> Wait(std::chrono::milliseconds timeout, size_t max_events);
 
  private:
   /**
    * @brief The file descriptor of the epoll instance.
    */
   int fd_ = -1;
-  /**
-   * @brief The events to handle.
-   */
-  std::vector<struct epoll_event> events_;
 };
 
 }  // namespace hash_server

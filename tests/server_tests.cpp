@@ -57,13 +57,13 @@ std::mutex ServerFixture::mutex_;
 
 class Client {
  public:
-  Client() : epoll_(kClientEpollMaxEvents) {
+  Client() {
     socket_.Connect(hash_server::SocketAddress(kServerAddress, kServerPort));
     epoll_.Add(socket_, hash_server::EPollDirection::kWriteTo);
   }
 
   void WaitForConnection() {
-    const auto descriptors = epoll_.Wait(kPollingTimeout);
+    const auto descriptors = epoll_.Wait(kPollingTimeout, kClientEpollMaxEvents);
     ASSERT_EQ(descriptors.size(), 1);
     ASSERT_EQ(descriptors[0], socket_.GetFd());
   }
@@ -78,7 +78,7 @@ class Client {
 
   std::string ReadResponse() {
     epoll_.Modify(socket_, hash_server::EPollDirection::kReadFrom);
-    const auto desc = epoll_.Wait(kPollingTimeout);
+    const auto desc = epoll_.Wait(kPollingTimeout, kClientEpollMaxEvents);
     std::string response;
     response.reserve(kExpectedResponseSize);
     while (response.size() < kExpectedResponseSize) {
