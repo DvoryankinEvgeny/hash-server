@@ -19,41 +19,50 @@ void Server::RunLoop() {
     std::cout << "Server::Loop\n";
     const auto readyDescriptors = epoll_.Wait(std::chrono::milliseconds{3000}, config_.epoll_max_events);
     for (const auto descriptor : readyDescriptors) {
-      std::cout << "Descriptor: " << descriptor << "\n";
       if (descriptor == socket_.GetFd()) {
         AcceptNewClient();
       } else {
-        auto &client_data = clients_sockets_.at(descriptor);
-        epoll_.Delete(client_data.socket_);
-        thread_pool_.AddTask([this, &client_data] {
-          const auto &soc = client_data.socket_;
-          auto data = soc.Read(config_.socket_read_buffer_size);
-          if (data.empty()) {
-            std::cout << "EOF\n";
-            clients_sockets_.erase(client_data.socket_.GetFd());
-            return;
-          }
-          const auto pos = data.find('\n');
-          const auto used_for_update = data.substr(0, pos);
-          std::cout << "Line before\n";
-          std::cout << "Used for update: " << used_for_update << "\n";
-          std::cout << " size " << used_for_update.length() << "\n";
-          client_data.data_.Update(used_for_update);
-          if (pos != data.npos) {
-            std::string response = client_data.data_.Finalize();
-            client_data.socket_.Write(response);
-          }
-
-          if (pos != data.npos && pos != data.size() - 1) {
-            const auto rest = data.substr(pos + 1);
-            std::cout << "Rest: " << rest << " size " << rest.length() << "\n";
-            client_data.data_.Update(rest);
-          }
-          epoll_.Add(client_data.socket_, EPollDirection::kReadFrom);
-        });
+        HandleClientData(descriptor);
       }
     }
   }
+}
+
+void Server::HandleClientData(int descriptor) {
+  // Get data associated with the socket
+  auto &client_data = clients_sockets_.at(descriptor);
+
+  // Unsubscribe this socket from any events until we process the data
+  epoll_.Delete(client_data.socket_);
+
+  // Create a task to process the data
+  thread_pool_.AddTask([this, &client_data] {
+    auto &[client_socket, hasher] = client_data;
+
+    auto client_data = client_socket.Read(config_.socket_read_buffer_size);
+    if (client_data.empty()) {
+      // Socket is already closed, so just remove it. There is nothing to do.
+      clients_sockets_.erase(client_socket.GetFd());
+      return;
+    }
+    const auto pos = client_data.find('\n');
+    const std::string_view used_for_update(client_data.data(), pos == client_data.npos ? client_data.size() : pos);
+    hasher.Update(used_for_update);
+    // If we have a complete line, calculate a hash it and send the response
+    if (pos != client_data.npos) {
+      std::string response = hasher.Finalize();
+      client_socket.Write(response);
+    }
+
+    // If we have some data left, don't forget to use it
+    if (pos != client_data.npos && pos < client_data.size() - 1) {
+      const std::string_view rest(client_data.data() + pos + 2);
+      hasher.Update(rest);
+    }
+
+    // Subscribe this socket for reading again
+    epoll_.Add(client_socket, EPollDirection::kReadFrom);
+  });
 }
 
 void Server::Stop() {

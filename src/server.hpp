@@ -35,6 +35,7 @@ class Server {
 
  private:
   void AcceptNewClient();
+  void HandleClientData(int descriptor);
 
  private:
   bool stopped_ = true;
