@@ -130,3 +130,15 @@ TEST_F(ServerFixture, DealingWithTheRestOfStringTest) {
   response = client.ReadResponse();
   ASSERT_EQ(response, kPreComputedHashHelloWorldReversed);
 }
+
+TEST_F(ServerFixture, MultipleStringInOneMessageTest) {
+  Client client;
+  client.WaitForConnection();
+  client.SendString("\nHello, World!\n!dlroW ,olleH\n");
+  auto response = client.ReadResponse();
+  ASSERT_EQ(response, kPreComputedHashEmptyString);
+  response = client.ReadResponse();
+  ASSERT_EQ(response, kPreComputedHashHelloWorld);
+  response = client.ReadResponse();
+  ASSERT_EQ(response, kPreComputedHashHelloWorldReversed);
+}
