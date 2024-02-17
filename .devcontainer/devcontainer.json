@@ -9,7 +9,9 @@
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
+	"forwardPorts": [
+		12345
+	],
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": "git config --global user.name \"Evgenii Dvoriankin\" && git config --global user.email evgenijdv@gmail.com && git config --global --add safe.directory /workspaces",
 	// Configure tool-specific properties.
