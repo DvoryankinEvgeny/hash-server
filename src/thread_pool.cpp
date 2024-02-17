@@ -4,8 +4,8 @@
 
 namespace hash_server {
 
-ThreadPool::ThreadPool(int num_threads) {
-  for (int i = 0; i < num_threads; i++) {
+ThreadPool::ThreadPool(size_t num_threads) {
+  for (size_t i = 0; i < num_threads; i++) {
     threads_.emplace_back([this] {
       while (true) {
         std::function<void()> task;

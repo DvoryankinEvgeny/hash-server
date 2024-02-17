@@ -24,7 +24,7 @@ class ThreadPool {
    * @brief Constructor that takes the number of threads in the pool.
    * @param num_threads The number of threads in the pool.
    */
-  explicit ThreadPool(int num_threads);
+  explicit ThreadPool(size_t num_threads);
 
   /**
    * @brief Destructor. Stops all threads and waits for them to finish.
