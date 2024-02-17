@@ -50,7 +50,7 @@ std::string TCPSocket::Read(size_t size) const {
   return buffer;
 }
 
-size_t TCPSocket::Write(const std::string &data) const {
+size_t TCPSocket::Write(std::string_view data) const {
   ssize_t n = write(fd_, data.data(), data.size());
   if (n < 0) {
     std::string message("ERROR writing to socket ");

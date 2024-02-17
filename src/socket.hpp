@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <string_view>
+
 #include "socket_address.hpp"
 
 namespace hash_server {
@@ -84,7 +86,7 @@ class TCPSocket {
    * @param data The data to write to the socket.
    * @return The number of bytes written.
    */
-  size_t Write(const std::string &data) const;
+  size_t Write(std::string_view data) const;
 
   /**
    * @brief Accepts a new connection on the socket.
