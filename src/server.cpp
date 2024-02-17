@@ -39,9 +39,12 @@ void Server::RunLoop() {
           std::cout << "Used for update: " << used_for_update << "\n";
           std::cout << " size " << used_for_update.length() << "\n";
           client_data.data_.Update(used_for_update);
+          if (pos != data.npos) {
           std::string response = client_data.data_.Finalize();
           client_data.socket_.Write(response);
-          if (pos != data.size() - 1) {
+          }
+
+          if (pos != data.npos && pos != data.size() - 1) {
             const auto rest = data.substr(pos + 1);
             std::cout << "Rest: " << rest << " size " << rest.length() << "\n";
             client_data.data_.Update(rest);
