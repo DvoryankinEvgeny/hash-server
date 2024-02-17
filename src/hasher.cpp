@@ -8,7 +8,7 @@ namespace hash_server {
 
 Hasher::Hasher() { SHA256_Init(&context_); }
 
-void Hasher::Update(const std::string &data) { SHA256_Update(&context_, data.c_str(), data.size()); }
+void Hasher::Update(std::string_view data) { SHA256_Update(&context_, data.data(), data.size()); }
 
 std::string Hasher::Finalize() {
   std::array<unsigned char, SHA256_DIGEST_LENGTH> hash{};

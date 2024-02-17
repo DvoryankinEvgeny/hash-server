@@ -2,14 +2,14 @@
 
 #include <openssl/sha.h>
 
-#include <string>
+#include <string_view>
 
 namespace hash_server {
 class Hasher {
  public:
   Hasher();
 
-  void Update(const std::string &data);
+  void Update(std::string_view data);
   std::string Finalize();
 
  private:
