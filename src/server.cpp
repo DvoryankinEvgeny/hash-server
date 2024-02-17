@@ -4,13 +4,16 @@
 
 namespace hash_server {
 
-Server::Server(SocketAddress &&address) : address_(std::move(address)) {}
+Server::Server(SocketAddress &&address, ServerConfiguration &&config)
+    : config_(std::move(config)),
+      address_(std::move(address)),
+      epoll_(config_.epoll_max_events),
+      thread_pool_(config_.thread_pool_size) {}
 
 void Server::RunLoop() {
   std::cout << "Server::RunLoop\n";
-  const int kMaxQueueSize = 10;
   socket_.Bind(address_);
-  socket_.Listen(kMaxQueueSize);
+  socket_.Listen(config_.select_max_queue_size);
   epoll_.Add(socket_, EPollDirection::kReadFrom);
 
   stopped_ = false;
@@ -27,7 +30,7 @@ void Server::RunLoop() {
         epoll_.Delete(client_data.socket_);
         thread_pool_.AddTask([this, &client_data] {
           const auto &soc = client_data.socket_;
-          auto data = soc.Read(2);
+          auto data = soc.Read(config_.socket_read_buffer_size);
           if (data.empty()) {
             std::cout << "EOF\n";
             clients_sockets_.erase(client_data.socket_.GetFd());

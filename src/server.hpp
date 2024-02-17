@@ -4,6 +4,7 @@
 
 #include "epoll.hpp"
 #include "hasher.hpp"
+#include "server_configuration.hpp"
 #include "socket.hpp"
 #include "socket_address.hpp"
 #include "thread_pool.hpp"
@@ -20,7 +21,7 @@ struct ClientData {
 
 class Server {
  public:
-  explicit Server(SocketAddress&& address);
+  explicit Server(SocketAddress&& address, ServerConfiguration&& config);
   ~Server() = default;
 
   Server(const Server&) = delete;
@@ -37,10 +38,11 @@ class Server {
 
  private:
   bool stopped_ = true;
+  ServerConfiguration config_;
   SocketAddress address_;
   TCPSocket socket_;
   std::unordered_map<int, ClientData> clients_sockets_;
   EPoll epoll_;
-  ThreadPool thread_pool_{4};
+  ThreadPool thread_pool_;
 };
 }  // namespace hash_server

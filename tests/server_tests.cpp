@@ -15,16 +15,23 @@ const std::string kServerAddress("127.0.0.1");
 const unsigned kServerPort = 2345;
 const std::chrono::milliseconds kPollingTimeout{3000};
 const size_t kExpectedResponseSize = 64;
+const size_t kClientEpollMaxEvents = 5;
 }  // namespace
 
 class ServerFixture : public testing::Test {
  protected:
   static void SetUpTestSuite() {
-    server_.reset(new hash_server::Server(hash_server::SocketAddress(kServerAddress, kServerPort)));
-    server_thread_.reset(new std::thread([]() {
+    hash_server::ServerConfiguration config;
+    config.thread_pool_size = 1;
+    config.epoll_max_events = 10;
+    config.socket_read_buffer_size = 2;
+    config.select_max_queue_size = 10;
+    server_ = std::make_unique<hash_server::Server>(hash_server::SocketAddress{kServerAddress, kServerPort},
+                                                    std::move(config));
+    server_thread_ = std::make_unique<std::thread>([]() {
       cv_.notify_all();
       server_->RunLoop();
-    }));
+    });
 
     std::unique_lock<std::mutex> lock(mutex_);
     cv_.wait(lock);
@@ -50,7 +57,7 @@ std::mutex ServerFixture::mutex_;
 
 class Client {
  public:
-  Client() {
+  Client() : epoll_(kClientEpollMaxEvents) {
     socket_.Connect(hash_server::SocketAddress(kServerAddress, kServerPort));
     epoll_.Add(socket_, hash_server::EPollDirection::kWriteTo);
   }
