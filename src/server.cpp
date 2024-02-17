@@ -4,6 +4,23 @@
 
 namespace hash_server {
 
+namespace {
+std::vector<std::pair<std::string_view, bool>> SplitStringBySymbol(std::string_view str, char symbol) {
+  std::vector<std::pair<std::string_view, bool>> result;
+  size_t start = 0;
+  while (start < str.size()) {
+    const auto end = str.find(symbol, start);
+    if (end == str.npos) {
+      result.emplace_back(str.substr(start), false);
+      break;
+    }
+    result.emplace_back(str.substr(start, end - start), true);
+    start = end + 1;
+  }
+  return result;
+}
+}  // namespace
+
 Server::Server(SocketAddress &&address, ServerConfiguration &&config)
     : config_(std::move(config)), address_(std::move(address)), thread_pool_(config_.thread_pool_size) {}
 
@@ -45,19 +62,14 @@ void Server::HandleClientData(int descriptor) {
       clients_sockets_.erase(client_socket.GetFd());
       return;
     }
-    const auto pos = client_data.find('\n');
-    const std::string_view used_for_update(client_data.data(), pos == client_data.npos ? client_data.size() : pos);
-    hasher.Update(used_for_update);
-    // If we have a complete line, calculate a hash it and send the response
-    if (pos != client_data.npos) {
-      std::string response = hasher.Finalize();
-      client_socket.Write(response);
-    }
 
-    // If we have some data left, don't forget to use it
-    if (pos != client_data.npos && pos < client_data.size() - 1) {
-      const std::string_view rest(client_data.data() + pos + 2);
-      hasher.Update(rest);
+    const auto strings = SplitStringBySymbol(client_data, '\n');
+    for (const auto &[str, is_complete] : strings) {
+      hasher.Update(str);
+      if (is_complete) {
+        std::string response = hasher.Finalize();
+        client_socket.Write(response);
+      }
     }
 
     // Subscribe this socket for reading again
