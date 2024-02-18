@@ -1,0 +1,10 @@
+.clang-format
+.clang-tidy
+.devcontainer/
+.dockerignore
+.github/
+.git/
+.gitignore
+.vscode/
+Dockerfile
+build/
