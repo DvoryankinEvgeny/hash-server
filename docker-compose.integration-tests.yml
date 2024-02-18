@@ -1,0 +1,28 @@
+version: '3'
+services:
+  server:
+    build:
+      dockerfile: Dockerfile
+      target: release
+    networks:
+      integration-network:
+        ipv4_address: 172.16.0.2
+
+  tests:
+    build:
+      dockerfile: Dockerfile
+      target: integration-tests
+    environment:
+      - SERVER_ADDRESS=172.16.0.2
+      - SERVER_PORT=12345
+    depends_on:
+      - server
+    networks:
+      integration-network:
+        ipv4_address: 172.16.0.3
+
+networks:
+  integration-network:
+    ipam:
+      config:
+        - subnet: 172.16.0.0/24

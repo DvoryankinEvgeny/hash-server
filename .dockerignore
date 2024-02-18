@@ -8,3 +8,4 @@
 .vscode/
 Dockerfile
 build/
+docker-compose.*
