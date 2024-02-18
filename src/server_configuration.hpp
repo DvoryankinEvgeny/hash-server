@@ -7,8 +7,8 @@
 
 #include <thread>
 
-#include "epoll.hpp"
 #include "hasher.hpp"
+#include "polling.hpp"
 
 namespace hash_server {
 

@@ -6,8 +6,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set (Sources
-    epoll.cpp
     hasher.cpp
+    polling.cpp
     server.cpp
     socket.cpp
     socket_address.cpp

@@ -5,7 +5,7 @@
 #include <memory>
 #include <thread>
 
-#include "epoll.hpp"
+#include "polling.hpp"
 #include "precomputed_hashes.hpp"
 #include "server.hpp"
 #include "socket.hpp"

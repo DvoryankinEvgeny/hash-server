@@ -24,8 +24,8 @@ std::vector<std::pair<std::string_view, bool>> SplitStringBySymbol(std::string_v
 Server::Server(SocketAddress &&address, ServerConfiguration &&config, std::unique_ptr<SocketPoller> &&poller)
     : config_(std::move(config)),
       address_(std::move(address)),
-      thread_pool_(config_.thread_pool_size),
-      poller_(std::move(poller)) {}
+      poller_(std::move(poller)),
+      thread_pool_(config_.thread_pool_size) {}
 
 void Server::RunLoop() {
   socket_.Bind(address_);

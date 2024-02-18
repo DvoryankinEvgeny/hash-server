@@ -1,5 +1,5 @@
 /**
- * @file epoll.hpp
+ * @file polling.hpp
  * @brief Defines the SocketPoller class and related types for socket polling.
  */
 

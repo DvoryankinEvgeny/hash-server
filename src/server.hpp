@@ -3,8 +3,8 @@
 #include <memory>
 #include <unordered_map>
 
-#include "epoll.hpp"
 #include "hasher.hpp"
+#include "polling.hpp"
 #include "server_configuration.hpp"
 #include "socket.hpp"
 #include "socket_address.hpp"
