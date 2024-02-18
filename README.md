@@ -35,3 +35,7 @@ Run integration tests:
 docker-compose -f docker-compose.integration-tests.yml up -d
 docker-compose -f docker-compose.integration-tests.yml logs tests
 ```
+## Some notes about the solution
+I added unit tests mostly for the `Hasher` class only because everything else is the network layer and will be tested with integration tests.
+
+For entities responsible for socket polling and hash calculation, I introduced interfaces just to show my approach in case when multiple implementations are needed. Since there are no requirements to support more than one hash function or polling mechanism, this code is a little bit overcomplicated. My personal opinion is that interfaces should be introduced only when you have at least two implementations. Only in this case, it is possible to write a good interface that does not have to be constantly rewritten and modified.
