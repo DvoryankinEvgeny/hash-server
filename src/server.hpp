@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <unordered_map>
 
 #include "epoll.hpp"
@@ -13,9 +14,10 @@ namespace hash_server {
 
 struct ClientData {
   TCPSocket socket_;
-  Hasher data_;
+  std::unique_ptr<Hasher> data_;
 
-  ClientData(TCPSocket&& socket) : socket_(std::move(socket)) {}
+  ClientData(TCPSocket&& socket, std::unique_ptr<Hasher>&& hasher)
+      : socket_(std::move(socket)), data_(std::move(hasher)) {}
   ClientData() = delete;
 };
 

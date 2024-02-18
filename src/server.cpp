@@ -63,9 +63,9 @@ void Server::HandleClientData(int descriptor) {
 
     const auto strings = SplitStringBySymbol(client_data, '\n');
     for (const auto &[str, is_complete] : strings) {
-      hasher.Update(str);
+      hasher->Update(str);
       if (is_complete) {
-        std::string response = hasher.Finalize();
+        std::string response = hasher->Finalize();
         client_socket.Write(response);
       }
     }
@@ -83,7 +83,7 @@ void Server::AcceptNewClient() {
   epoll_.Add(new_socket, EPollDirection::kReadFrom);
 
   const auto fd = new_socket.GetFd();
-  clients_sockets_.emplace(fd, std::move(new_socket));
+  clients_sockets_.emplace(fd, ClientData{std::move(new_socket), CreateHasher(config_.hash_type)});
 }
 
 }  // namespace hash_server

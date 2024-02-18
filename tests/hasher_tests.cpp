@@ -4,25 +4,25 @@
 #include "precomputed_hashes.hpp"
 
 TEST(Sha256HasherTests, EmptyStringTest) {
-  hash_server::Hasher hasher;
-  auto result = hasher.Finalize();
+  const auto hasher = hash_server::CreateHasher(hash_server::kSHA256);
+  auto result = hasher->Finalize();
   ASSERT_EQ(result, kPreComputedHashEmptyString);
 }
 
 TEST(Sha256HasherTests, HelloWorldTest) {
-  hash_server::Hasher hasher;
-  hasher.Update("Hello, ");
-  hasher.Update("World!");
-  auto result = hasher.Finalize();
+  const auto hasher = hash_server::CreateHasher(hash_server::kSHA256);
+  hasher->Update("Hello, ");
+  hasher->Update("World!");
+  auto result = hasher->Finalize();
   ASSERT_EQ(result, kPreComputedHashHelloWorld);
 }
 
 TEST(Sha256HasherTests, UpdateAfterFinalizeTest) {
-  hash_server::Hasher hasher;
-  hasher.Update("Hello, World!");
-  auto result = hasher.Finalize();
+  const auto hasher = hash_server::CreateHasher(hash_server::kSHA256);
+  hasher->Update("Hello, World!");
+  auto result = hasher->Finalize();
   ASSERT_EQ(result, kPreComputedHashHelloWorld);
-  hasher.Update("!dlroW ,olleH");
-  result = hasher.Finalize();
+  hasher->Update("!dlroW ,olleH");
+  result = hasher->Finalize();
   ASSERT_EQ(result, kPreComputedHashHelloWorldReversed);
 }

@@ -14,11 +14,12 @@ const size_t kSelectMaxQueueSize = 100;
 
 auto main() -> int {
   try {
-    hash_server::ServerConfiguration config;
+    hash_server::ServerConfiguration config{};
     config.thread_pool_size = std::thread::hardware_concurrency();
     config.epoll_max_events = kEPollMaxEvents;
     config.socket_read_buffer_size = kSocketReadBufferSize;
     config.select_max_queue_size = kSelectMaxQueueSize;
+    config.hash_type = hash_server::HasherType::kSHA256;
     const int portno = 12345;
     hash_server::Server server(hash_server::SocketAddress{"0.0.0.0", portno}, std::move(config));
     server.RunLoop();

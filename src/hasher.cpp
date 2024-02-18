@@ -6,11 +6,22 @@
 
 namespace hash_server {
 
-Hasher::Hasher() { SHA256_Init(&context_); }
+class SHA256Hasher : public Hasher {
+ public:
+  SHA256Hasher();
 
-void Hasher::Update(std::string_view data) { SHA256_Update(&context_, data.data(), data.size()); }
+  void Update(std::string_view data) override;
+  std::string Finalize() override;
 
-std::string Hasher::Finalize() {
+ private:
+  SHA256_CTX context_;
+};
+
+SHA256Hasher::SHA256Hasher() { SHA256_Init(&context_); }
+
+void SHA256Hasher::Update(std::string_view data) { SHA256_Update(&context_, data.data(), data.size()); }
+
+std::string SHA256Hasher::Finalize() {
   std::array<unsigned char, SHA256_DIGEST_LENGTH> hash{};
   SHA256_Final(hash.data(), &context_);
   std::string outputBuffer;
@@ -21,5 +32,7 @@ std::string Hasher::Finalize() {
   SHA256_Init(&context_);
   return outputBuffer;
 }
+
+std::unique_ptr<Hasher> CreateHasher(HasherType) { return std::make_unique<SHA256Hasher>(); }
 
 }  // namespace hash_server
