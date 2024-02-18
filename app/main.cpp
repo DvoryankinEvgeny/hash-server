@@ -37,10 +37,10 @@ auto main(int argc, char* argv[]) -> int {
 
     hash_server::Server server(hash_server::SocketAddress{address, port}, std::move(config), std::move(poller));
     server.RunLoop();
-  } catch (const std::exception &ex) {
-    std::cout << "Something went wrong: " << ex.what() << "\n";
+  } catch (const std::exception& ex) {
+    std::cerr << "Something went wrong: " << ex.what() << "\n";
   } catch (...) {
-    std::cout << "Something went very very wrong\n";
+    std::cerr << "Something went very very wrong\n";
   }
   return 0;
 }
