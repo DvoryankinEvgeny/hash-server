@@ -25,7 +25,6 @@ Server::Server(SocketAddress &&address, ServerConfiguration &&config)
     : config_(std::move(config)), address_(std::move(address)), thread_pool_(config_.thread_pool_size) {}
 
 void Server::RunLoop() {
-  std::cout << "Server::RunLoop\n";
   socket_.Bind(address_);
   socket_.Listen(config_.select_max_queue_size);
   epoll_.Add(socket_, EPollDirection::kReadFrom);
@@ -33,7 +32,6 @@ void Server::RunLoop() {
   stopped_ = false;
 
   while (!stopped_) {
-    std::cout << "Server::Loop\n";
     const auto readyDescriptors = epoll_.Wait(std::chrono::milliseconds{3000}, config_.epoll_max_events);
     for (const auto descriptor : readyDescriptors) {
       if (descriptor == socket_.GetFd()) {
@@ -77,17 +75,13 @@ void Server::HandleClientData(int descriptor) {
   });
 }
 
-void Server::Stop() {
-  std::cout << "Server::Stop\n";
-  stopped_ = true;
-}
+void Server::Stop() { stopped_ = true; }
 
 void Server::AcceptNewClient() {
-  std::cout << "New connection\n";
   auto new_socket = socket_.Accept();
-  if (new_socket.GetFd() < 0) throw std::runtime_error("ERROR on accept\n");
 
   epoll_.Add(new_socket, EPollDirection::kReadFrom);
+
   const auto fd = new_socket.GetFd();
   clients_sockets_.emplace(fd, std::move(new_socket));
 }

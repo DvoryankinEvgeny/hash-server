@@ -32,7 +32,6 @@ ThreadPool::~ThreadPool() {
 
 void ThreadPool::AddTask(std::function<void()> function) {
   {
-    std::cout << "Adding task\n";
     std::unique_lock<std::mutex> lock(mutex_);
     tasks_.emplace(std::move(function));
   }
