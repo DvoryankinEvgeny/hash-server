@@ -7,9 +7,9 @@
 #include <chrono>
 #include <cstring>
 #include <iostream>
-#include <stdexcept>
 #include <vector>
 
+#include "errors_helper.hpp"
 #include "socket.hpp"
 
 namespace hash_server {
@@ -20,7 +20,7 @@ constexpr size_t kEPollSize = 255;  // Parameter is obsolete and just should be 
 
 EPoll::EPoll() : fd_(epoll_create(kEPollSize)) {
   if (fd_ < 0) {
-    throw std::invalid_argument("ERROR epoll_create");
+    ThrowRuntimeError("Failed to create a new epoll instance");
   }
 }
 
@@ -37,13 +37,13 @@ void EPoll::Add(const TCPSocket& socket, EPollDirection direction) {
   event.data.fd = socket.GetFd();
   int error = epoll_ctl(fd_, EPOLL_CTL_ADD, socket.GetFd(), &event);
   if (error < 0) {
-    throw std::invalid_argument(std::string("ERROR on EPOLL_CTL_ADD ") + strerror(errno));
+    ThrowRuntimeError("Failed to add socket to epoll instance");
   }
 }
 
 void EPoll::Delete(const TCPSocket& socket) {
   if (epoll_ctl(fd_, EPOLL_CTL_DEL, socket.GetFd(), nullptr) < 0) {
-    throw std::invalid_argument(std::string("ERROR on EPOLL_CTL_DEL ") + strerror(errno));
+    ThrowRuntimeError("Failed to delete socket from epoll instance");
   }
 }
 
@@ -56,7 +56,7 @@ void EPoll::Modify(const TCPSocket& socket, EPollDirection direction) {
   event.data.fd = socket.GetFd();
   int error = epoll_ctl(fd_, EPOLL_CTL_MOD, socket.GetFd(), &event);
   if (error < 0) {
-    throw std::invalid_argument(std::string("ERROR on EPOLL_CTL_MOD ") + strerror(errno));
+    ThrowRuntimeError("Failed to modify socket in epoll instance");
   }
 }
 
@@ -64,14 +64,14 @@ std::vector<int> EPoll::Wait(std::chrono::milliseconds timeout, size_t max_event
   std::vector<struct epoll_event> events(max_events);
   int epoll_ret = epoll_wait(fd_, events.data(), events.size(), timeout.count());
   if (epoll_ret < 0) {
-    throw std::invalid_argument(std::string("ERROR on epoll_wait ") + strerror(errno));
+    ThrowRuntimeError("Failed to wait for events on epoll instance");
   }
 
   std::vector<int> ready_sockets;
   ready_sockets.reserve(epoll_ret);
   for (int i = 0; i < epoll_ret; ++i) {
     if (events[i].events & EPOLLERR) {
-      std::cout << "Epoll failed for socket: " << events[i].data.fd << "\n";
+      // Let's not return sockets with errors
       continue;
     }
     ready_sockets.push_back(events[i].data.fd);

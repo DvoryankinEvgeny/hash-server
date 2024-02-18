@@ -4,14 +4,14 @@
 #include <netinet/in.h>
 
 #include <cstring>
-#include <stdexcept>
+
+#include "errors_helper.hpp"
 
 namespace hash_server {
 
 SocketAddress::SocketAddress(const std::string& address, unsigned port) {
   memset(&socket_address_, 0, sizeof(socket_address_));
-  if (inet_pton(AF_INET, address.c_str(), &(socket_address_.sin_addr)) != 1)
-    throw std::invalid_argument("Wrong socket address");
+  if (inet_pton(AF_INET, address.c_str(), &(socket_address_.sin_addr)) != 1) ThrowRuntimeError("Wrong socket address");
 
   socket_address_.sin_port = htons(port);
   socket_address_.sin_family = AF_INET;
