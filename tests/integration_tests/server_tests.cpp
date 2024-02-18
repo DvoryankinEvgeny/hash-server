@@ -10,56 +10,19 @@
 #include "server.hpp"
 #include "socket.hpp"
 
+extern std::string server_address;
+extern unsigned server_port;
+
 namespace {
-const std::string kServerAddress("127.0.0.1");
-const unsigned kServerPort = 2345;
 const std::chrono::milliseconds kPollingTimeout{3000};
 const size_t kExpectedResponseSize = 64;
 const size_t kClientEpollMaxEvents = 5;
 }  // namespace
 
-class ServerFixture : public testing::Test {
- protected:
-  static void SetUpTestSuite() {
-    hash_server::ServerConfiguration config;
-    config.thread_pool_size = 4;
-    config.epoll_max_events = 10;
-    config.socket_read_buffer_size = 2;
-    config.select_max_queue_size = 10;
-    server_ = std::make_unique<hash_server::Server>(hash_server::SocketAddress{kServerAddress, kServerPort},
-                                                    std::move(config),
-                                                    hash_server::CreateSocketPoller(hash_server::PollingType::kEPoll));
-    server_thread_ = std::make_unique<std::thread>([]() {
-      cv_.notify_all();
-      server_->RunLoop();
-    });
-
-    std::unique_lock<std::mutex> lock(mutex_);
-    cv_.wait(lock);
-  }
-
-  static void TearDownTestSuite() {
-    server_->Stop();
-    if (server_thread_->joinable()) server_thread_->join();
-    server_.reset(nullptr);
-    server_thread_.reset(nullptr);
-  }
-
-  static std::unique_ptr<hash_server::Server> server_;
-  static std::unique_ptr<std::thread> server_thread_;
-  static std::condition_variable cv_;
-  static std::mutex mutex_;
-};
-
-std::unique_ptr<hash_server::Server> ServerFixture::server_ = nullptr;
-std::unique_ptr<std::thread> ServerFixture::server_thread_ = nullptr;
-std::condition_variable ServerFixture::cv_;
-std::mutex ServerFixture::mutex_;
-
 class Client {
  public:
   Client() : poller_(hash_server::CreateSocketPoller(hash_server::PollingType::kEPoll)) {
-    socket_.Connect(hash_server::SocketAddress(kServerAddress, kServerPort));
+    socket_.Connect(hash_server::SocketAddress(server_address, server_port));
     poller_->Add(socket_, hash_server::PollingDirection::kWriteTo);
   }
 
@@ -94,14 +57,14 @@ class Client {
   std::unique_ptr<hash_server::SocketPoller> poller_;
 };
 
-TEST_F(ServerFixture, SimpleHelloWorldTest) {
+TEST(ServerFixture, SimpleHelloWorldTest) {
   Client client;
   client.WaitForConnection();
   std::string response = client.GetHashForString("Hello, World!");
   ASSERT_EQ(response, kPreComputedHashHelloWorld);
 }
 
-TEST_F(ServerFixture, MultipleClientsTest) {
+TEST(ServerFixture, MultipleClientsTest) {
   std::vector<std::thread> threads;
   const int kNumThreads = 50;
   threads.reserve(kNumThreads);
@@ -121,7 +84,7 @@ TEST_F(ServerFixture, MultipleClientsTest) {
   }
 }
 
-TEST_F(ServerFixture, DealingWithTheRestOfStringTest) {
+TEST(ServerFixture, DealingWithTheRestOfStringTest) {
   Client client;
   client.WaitForConnection();
   client.SendString("Hello, World!\n!dlroW ");
@@ -132,7 +95,7 @@ TEST_F(ServerFixture, DealingWithTheRestOfStringTest) {
   ASSERT_EQ(response, kPreComputedHashHelloWorldReversed);
 }
 
-TEST_F(ServerFixture, MultipleStringInOneMessageTest) {
+TEST(ServerFixture, MultipleStringInOneMessageTest) {
   Client client;
   client.WaitForConnection();
   client.SendString("\nHello, World!\n!dlroW ,olleH\n");
