@@ -69,6 +69,7 @@ void Server::HandleClientData(int descriptor) {
       hasher->Update(str);
       if (is_complete) {
         std::string response = hasher->Finalize();
+        response.push_back(config_.stop_symbol);
         client_socket.Write(response);
       }
     }

@@ -85,6 +85,7 @@ class Client {
     while (response.size() < kExpectedResponseSize) {
       response += socket_.Read(kExpectedResponseSize);
     }
+    socket_.Read(1);  // Skip stop-symbol
     return response;
   }
 
@@ -97,7 +98,6 @@ TEST_F(ServerFixture, SimpleHelloWorldTest) {
   Client client;
   client.WaitForConnection();
   std::string response = client.GetHashForString("Hello, World!");
-  std::cout << "Response: " << response << "\n";
   ASSERT_EQ(response, kPreComputedHashHelloWorld);
 }
 
