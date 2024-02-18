@@ -23,7 +23,7 @@ struct ClientData {
 
 class Server {
  public:
-  explicit Server(SocketAddress&& address, ServerConfiguration&& config);
+  explicit Server(SocketAddress&& address, ServerConfiguration&& config, std::unique_ptr<SocketPoller>&& poller);
   ~Server() = default;
 
   Server(const Server&) = delete;
@@ -45,7 +45,7 @@ class Server {
   SocketAddress address_;
   TCPSocket socket_;
   std::unordered_map<int, ClientData> clients_sockets_;
-  EPoll epoll_;
+  std::unique_ptr<SocketPoller> poller_;
   ThreadPool thread_pool_;
 };
 }  // namespace hash_server

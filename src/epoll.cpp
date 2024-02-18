@@ -15,8 +15,34 @@
 namespace hash_server {
 
 namespace {
-constexpr size_t kEPollSize = 255;  // Parameter is obsolete and just should be grater than 0
+constexpr size_t kEPollSize = 1;  // Parameter is obsolete and just should be grater than 0
+
+int PollingDirectionToEpoll(PollingDirection direction) {
+  switch (direction) {
+    case PollingDirection::kReadFrom:
+      return EPOLLIN;
+    case PollingDirection::kWriteTo:
+      return EPOLLOUT;
+    case PollingDirection::kReadWrite:
+    default:
+      return EPOLLIN | EPOLLOUT;
+  }
+}
 }  // namespace
+
+class EPoll : public SocketPoller {
+ public:
+  EPoll();
+  ~EPoll();
+
+  void Add(const TCPSocket& socket, PollingDirection direction) override;
+  void Delete(const TCPSocket& socket) override;
+  void Modify(const TCPSocket& socket, PollingDirection direction) override;
+  std::vector<int> Wait(std::chrono::milliseconds timeout, size_t max_events) override;
+
+ private:
+  int fd_ = -1;
+};
 
 EPoll::EPoll() : fd_(epoll_create(kEPollSize)) {
   if (fd_ < 0) {
@@ -28,12 +54,12 @@ EPoll::~EPoll() {
   if (fd_ > 0) close(fd_);
 }
 
-void EPoll::Add(const TCPSocket& socket, EPollDirection direction) {
+void EPoll::Add(const TCPSocket& socket, PollingDirection direction) {
   struct epoll_event event {};
 
   memset(&event, 0, sizeof(struct epoll_event));
 
-  event.events = static_cast<int>(direction);
+  event.events = PollingDirectionToEpoll(direction);
   event.data.fd = socket.GetFd();
   int error = epoll_ctl(fd_, EPOLL_CTL_ADD, socket.GetFd(), &event);
   if (error < 0) {
@@ -47,12 +73,12 @@ void EPoll::Delete(const TCPSocket& socket) {
   }
 }
 
-void EPoll::Modify(const TCPSocket& socket, EPollDirection direction) {
+void EPoll::Modify(const TCPSocket& socket, PollingDirection direction) {
   struct epoll_event event {};
 
   memset(&event, 0, sizeof(struct epoll_event));
 
-  event.events = static_cast<int>(direction);
+  event.events = PollingDirectionToEpoll(direction);
   event.data.fd = socket.GetFd();
   int error = epoll_ctl(fd_, EPOLL_CTL_MOD, socket.GetFd(), &event);
   if (error < 0) {
@@ -62,7 +88,7 @@ void EPoll::Modify(const TCPSocket& socket, EPollDirection direction) {
 
 std::vector<int> EPoll::Wait(std::chrono::milliseconds timeout, size_t max_events) {
   std::vector<struct epoll_event> events(max_events);
-  int epoll_ret = epoll_wait(fd_, events.data(), events.size(), timeout.count());
+  int epoll_ret = epoll_wait(fd_, events.data(), static_cast<int>(events.size()), static_cast<int>(timeout.count()));
   if (epoll_ret < 0) {
     ThrowRuntimeError("Failed to wait for events on epoll instance");
   }
@@ -79,5 +105,7 @@ std::vector<int> EPoll::Wait(std::chrono::milliseconds timeout, size_t max_event
   ready_sockets.shrink_to_fit();
   return ready_sockets;
 }
+
+std::unique_ptr<SocketPoller> CreateSocketPoller(PollingType) { return std::make_unique<EPoll>(); }
 
 }  // namespace hash_server

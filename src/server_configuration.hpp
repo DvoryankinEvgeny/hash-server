@@ -7,6 +7,7 @@
 
 #include <thread>
 
+#include "epoll.hpp"
 #include "hasher.hpp"
 
 namespace hash_server {
@@ -45,6 +46,11 @@ struct ServerConfiguration {
    * @brief The symbol that indicates the end of a message.
    */
   char stop_symbol = '\n';
+
+  /**
+   * @brief The type of the socket poller.
+   */
+  PollingType polling_type = PollingType::kEPoll;
 };
 
 }  // namespace hash_server

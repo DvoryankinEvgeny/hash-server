@@ -1,14 +1,12 @@
 /**
  * @file epoll.hpp
- * @brief Defines the EPoll class for handling epoll operations.
+ * @brief Defines the SocketPoller class and related types for socket polling.
  */
 
 #pragma once
 
-#include <sys/epoll.h>
-
 #include <chrono>
-#include <stdexcept>
+#include <memory>
 #include <vector>
 
 #include "socket.hpp"
@@ -16,83 +14,79 @@
 namespace hash_server {
 
 /**
- * @enum EPollDirection
- * @brief Enumeration for the direction of epoll operations.
+ * @enum PollingDirection
+ * @brief Enumeration for the direction of polling operations.
  */
-enum class EPollDirection {
-  kReadFrom = EPOLLIN,              ///< Notify when socket is ready for reading.
-  kWriteTo = EPOLLOUT,              ///< Notify when socket is ready for writing.
-  kReadWrite = EPOLLIN | EPOLLOUT,  ///< Both read from and write to the socket.
+enum class PollingDirection {
+  kReadFrom,   ///< Read from the socket.
+  kWriteTo,    ///< Write to the socket.
+  kReadWrite,  ///< Both read from and write to the socket.
 };
 
 /**
- * @class EPoll
- * @brief This class provides methods for handling epoll operations.
+ * @enum PollingType
+ * @brief Enumeration for the types of polling.
  */
-class EPoll {
+enum class PollingType {
+  kEPoll,  ///< EPoll polling.
+};
+
+/**
+ * @class SocketPoller
+ * @brief This class provides an interface for socket polling.
+ */
+class SocketPoller {
  public:
   /**
-   * @brief Constructor that creates a new epoll instance.
+   * @brief Default constructor.
    */
-  EPoll();
+  SocketPoller() = default;
 
   /**
-   * @brief Destructor. Closes the epoll instance.
+   * @brief Virtual destructor.
    */
-  ~EPoll();
+  virtual ~SocketPoller() = default;
+
+  // Deleted copy and move constructors and assignment operators.
+  SocketPoller(const SocketPoller&) = delete;
+  SocketPoller& operator=(const SocketPoller&) = delete;
+  SocketPoller(SocketPoller&&) = delete;
+  SocketPoller& operator=(SocketPoller&&) = delete;
 
   /**
-   * @brief Deleted copy constructor.
-   */
-  EPoll(const EPoll&) = delete;
-
-  /**
-   * @brief Deleted copy assignment operator.
-   */
-  EPoll& operator=(const EPoll&) = delete;
-
-  /**
-   * @brief Deleted move constructor.
-   */
-  EPoll(EPoll&&) = delete;
-
-  /**
-   * @brief Deleted move assignment operator.
-   */
-  EPoll& operator=(EPoll&&) = delete;
-
-  /**
-   * @brief Adds a socket to the epoll instance.
+   * @brief Adds a socket to the poller.
    * @param socket The socket to add.
-   * @param direction The direction of the epoll operation.
+   * @param direction The direction of the polling operation.
    */
-  void Add(const TCPSocket& socket, EPollDirection direction);
+  virtual void Add(const TCPSocket& socket, PollingDirection direction) = 0;
 
   /**
-   * @brief Deletes a socket from the epoll instance.
+   * @brief Deletes a socket from the poller.
    * @param socket The socket to delete.
    */
-  void Delete(const TCPSocket& socket);
+  virtual void Delete(const TCPSocket& socket) = 0;
 
   /**
-   * @brief Modifies the epoll operation for a socket.
+   * @brief Modifies the polling operation for a socket.
    * @param socket The socket to modify.
-   * @param direction The new direction of the epoll operation.
+   * @param direction The new direction of the polling operation.
    */
-  void Modify(const TCPSocket& socket, EPollDirection direction);
+  virtual void Modify(const TCPSocket& socket, PollingDirection direction) = 0;
 
   /**
-   * @brief Waits for events on the epoll instance.
+   * @brief Waits for events on the poller.
    * @param timeout The maximum time to wait for events.
+   * @param max_events The maximum number of events to handle at once.
    * @return A vector of file descriptors for the sockets with events.
    */
-  std::vector<int> Wait(std::chrono::milliseconds timeout, size_t max_events);
-
- private:
-  /**
-   * @brief The file descriptor of the epoll instance.
-   */
-  int fd_ = -1;
+  virtual std::vector<int> Wait(std::chrono::milliseconds timeout, size_t max_events) = 0;
 };
+
+/**
+ * @brief Creates a socket poller of the specified type.
+ * @param type The type of the poller.
+ * @return A unique_ptr to the socket poller.
+ */
+std::unique_ptr<SocketPoller> CreateSocketPoller(PollingType type);
 
 }  // namespace hash_server

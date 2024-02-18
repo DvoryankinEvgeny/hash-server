@@ -20,8 +20,13 @@ auto main() -> int {
     config.socket_read_buffer_size = kSocketReadBufferSize;
     config.select_max_queue_size = kSelectMaxQueueSize;
     config.hash_type = hash_server::HasherType::kSHA256;
+    config.stop_symbol = '\n';
+    config.polling_type = hash_server::PollingType::kEPoll;
+
+    auto poller = hash_server::CreateSocketPoller(config.polling_type);
+
     const int portno = 12345;
-    hash_server::Server server(hash_server::SocketAddress{"0.0.0.0", portno}, std::move(config));
+    hash_server::Server server(hash_server::SocketAddress{"0.0.0.0", portno}, std::move(config), std::move(poller));
     server.RunLoop();
   } catch (const std::exception &ex) {
     std::cout << "Something went wrong: " << ex.what() << "\n";

@@ -27,7 +27,8 @@ class ServerFixture : public testing::Test {
     config.socket_read_buffer_size = 2;
     config.select_max_queue_size = 10;
     server_ = std::make_unique<hash_server::Server>(hash_server::SocketAddress{kServerAddress, kServerPort},
-                                                    std::move(config));
+                                                    std::move(config),
+                                                    hash_server::CreateSocketPoller(hash_server::PollingType::kEPoll));
     server_thread_ = std::make_unique<std::thread>([]() {
       cv_.notify_all();
       server_->RunLoop();
@@ -57,13 +58,13 @@ std::mutex ServerFixture::mutex_;
 
 class Client {
  public:
-  Client() {
+  Client() : poller_(hash_server::CreateSocketPoller(hash_server::PollingType::kEPoll)) {
     socket_.Connect(hash_server::SocketAddress(kServerAddress, kServerPort));
-    epoll_.Add(socket_, hash_server::EPollDirection::kWriteTo);
+    poller_->Add(socket_, hash_server::PollingDirection::kWriteTo);
   }
 
   void WaitForConnection() {
-    const auto descriptors = epoll_.Wait(kPollingTimeout, kClientEpollMaxEvents);
+    const auto descriptors = poller_->Wait(kPollingTimeout, kClientEpollMaxEvents);
     ASSERT_EQ(descriptors.size(), 1);
     ASSERT_EQ(descriptors[0], socket_.GetFd());
   }
@@ -77,8 +78,8 @@ class Client {
   void SendString(const std::string& str) { socket_.Write(str); }
 
   std::string ReadResponse() {
-    epoll_.Modify(socket_, hash_server::EPollDirection::kReadFrom);
-    const auto desc = epoll_.Wait(kPollingTimeout, kClientEpollMaxEvents);
+    poller_->Modify(socket_, hash_server::PollingDirection::kReadFrom);
+    const auto desc = poller_->Wait(kPollingTimeout, kClientEpollMaxEvents);
     std::string response;
     response.reserve(kExpectedResponseSize);
     while (response.size() < kExpectedResponseSize) {
@@ -89,7 +90,7 @@ class Client {
 
  private:
   hash_server::TCPSocket socket_;
-  hash_server::EPoll epoll_;
+  std::unique_ptr<hash_server::SocketPoller> poller_;
 };
 
 TEST_F(ServerFixture, SimpleHelloWorldTest) {
