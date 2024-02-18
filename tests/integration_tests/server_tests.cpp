@@ -57,14 +57,14 @@ class Client {
   std::unique_ptr<hash_server::SocketPoller> poller_;
 };
 
-TEST(ServerFixture, SimpleHelloWorldTest) {
+TEST(IntegrationTest, SimpleHelloWorldTest) {
   Client client;
   client.WaitForConnection();
   std::string response = client.GetHashForString("Hello, World!");
   ASSERT_EQ(response, kPreComputedHashHelloWorld);
 }
 
-TEST(ServerFixture, MultipleClientsTest) {
+TEST(IntegrationTest, MultipleClientsTest) {
   std::vector<std::thread> threads;
   const int kNumThreads = 50;
   threads.reserve(kNumThreads);
@@ -84,7 +84,7 @@ TEST(ServerFixture, MultipleClientsTest) {
   }
 }
 
-TEST(ServerFixture, DealingWithTheRestOfStringTest) {
+TEST(IntegrationTest, DealingWithTheRestOfStringTest) {
   Client client;
   client.WaitForConnection();
   client.SendString("Hello, World!\n!dlroW ");
@@ -95,7 +95,7 @@ TEST(ServerFixture, DealingWithTheRestOfStringTest) {
   ASSERT_EQ(response, kPreComputedHashHelloWorldReversed);
 }
 
-TEST(ServerFixture, MultipleStringInOneMessageTest) {
+TEST(IntegrationTest, MultipleStringInOneMessageTest) {
   Client client;
   client.WaitForConnection();
   client.SendString("\nHello, World!\n!dlroW ,olleH\n");
