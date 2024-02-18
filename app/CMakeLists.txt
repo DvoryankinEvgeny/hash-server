@@ -13,6 +13,5 @@ add_executable(hash-server main.cpp)
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         pthread
-        OpenSSL::SSL
         hash-server-lib
     )
