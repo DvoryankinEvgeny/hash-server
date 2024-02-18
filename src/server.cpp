@@ -61,7 +61,7 @@ void Server::HandleClientData(int descriptor) {
       return;
     }
 
-    const auto strings = SplitStringBySymbol(client_data, '\n');
+    const auto strings = SplitStringBySymbol(client_data, config_.stop_symbol);
     for (const auto &[str, is_complete] : strings) {
       hasher->Update(str);
       if (is_complete) {

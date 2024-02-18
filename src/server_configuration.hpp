@@ -37,6 +37,8 @@ struct ServerConfiguration {
   size_t select_max_queue_size = 100;
 
   HasherType hash_type = HasherType::kSHA256;
+
+  char stop_symbol = '\n';
 };
 
 }  // namespace hash_server
