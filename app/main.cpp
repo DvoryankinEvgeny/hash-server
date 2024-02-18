@@ -12,7 +12,12 @@ const size_t kSocketReadBufferSize = 1024 * 1024;
 const size_t kSelectMaxQueueSize = 100;
 }  // namespace
 
-auto main() -> int {
+auto main(int argc, char* argv[]) -> int {
+  if (argc != 3) {
+    std::cout << "Usage: " << argv[0] << "<address> <port>\n";
+    std::cout << "Example: " << argv[0] << "0.0.0.0 12345\n";
+    return 1;
+  }
   try {
     hash_server::ServerConfiguration config{};
     config.thread_pool_size = std::thread::hardware_concurrency();
@@ -25,8 +30,12 @@ auto main() -> int {
 
     auto poller = hash_server::CreateSocketPoller(config.polling_type);
 
-    const int portno = 12345;
-    hash_server::Server server(hash_server::SocketAddress{"0.0.0.0", portno}, std::move(config), std::move(poller));
+    std::cout << "Starting server on " << argv[1] << ":" << argv[2] << "\n";
+
+    const std::string address(argv[1]);
+    const unsigned port = std::stoul(argv[2]);
+
+    hash_server::Server server(hash_server::SocketAddress{address, port}, std::move(config), std::move(poller));
     server.RunLoop();
   } catch (const std::exception &ex) {
     std::cout << "Something went wrong: " << ex.what() << "\n";
