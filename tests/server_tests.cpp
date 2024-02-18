@@ -22,7 +22,7 @@ class ServerFixture : public testing::Test {
  protected:
   static void SetUpTestSuite() {
     hash_server::ServerConfiguration config;
-    config.thread_pool_size = 1;
+    config.thread_pool_size = 4;
     config.epoll_max_events = 10;
     config.socket_read_buffer_size = 2;
     config.select_max_queue_size = 10;
