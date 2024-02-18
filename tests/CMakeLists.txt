@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16.0)
-project(hash-server-test VERSION 0.1.0 LANGUAGES CXX)
+project(hash-server-tests VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -28,7 +28,7 @@ set (Sources
     socket_address_tests.cpp
 )
 
-add_executable(hash-server-test ${Sources})
-target_link_libraries(hash-server-test PUBLIC gmock_main hash-server-lib)
+add_executable(${PROJECT_NAME} ${Sources})
+target_link_libraries(${PROJECT_NAME} PUBLIC gmock_main hash-server-lib)
 
-add_test(NAME hash-server-test COMMAND hash-server-test)
+add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
