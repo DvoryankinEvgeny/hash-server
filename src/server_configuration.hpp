@@ -36,8 +36,14 @@ struct ServerConfiguration {
    */
   size_t select_max_queue_size = 100;
 
+  /**
+   * @brief The type of the hasher.
+   */
   HasherType hash_type = HasherType::kSHA256;
 
+  /**
+   * @brief The symbol that indicates the end of a message.
+   */
   char stop_symbol = '\n';
 };
 
